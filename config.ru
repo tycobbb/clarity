@@ -1,5 +1,4 @@
-require_relative './web/app'
+require_relative './app/app'
 require_relative './http/handler'
 
-app = Clarity::Web::App.new
-run(app)
+run(App.new)
