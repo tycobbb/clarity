@@ -3,8 +3,7 @@ module Clarity
     class App
       # entry point
       def call(rack_env)
-        puts 'hello, app'
-        return [200, {}, '']
+        return [200, {}, ['hello, app']]
       end
 
       # endpoints

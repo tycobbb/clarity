@@ -3,12 +3,7 @@ require 'socket'
 require_relative './utils'
 require_relative './errors'
 require_relative './request'
-
-DEFAULT_RESPONSE = %[
-HTTP/1.1 200 OK
-
-hello, world
-]
+require_relative './response'
 
 module Clarity
   module Http
@@ -43,7 +38,7 @@ module Clarity
         request.parse(connection)
 
         puts "\n--> in\n"
-        puts "\n#{request}\n"
+        puts "\n#{request.to_s.chomp}\n"
 
         # build rack environment for this request
         env = build_rack_env(request)
@@ -52,12 +47,12 @@ module Clarity
       end
 
       def handle_out(connection, rack_result)
-        response = DEFAULT_RESPONSE
+        response = Response.new(*rack_result)
 
         puts "\n<-- out\n"
-        puts "\n#{response}\n"
+        puts "\n#{response.to_s.chomp}\n"
 
-        connection.send(response, 0)
+        connection.send(response.serialize, 0)
       end
 
       def build_rack_env(request)
