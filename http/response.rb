@@ -34,9 +34,18 @@ module Clarity
       private
 
       def serialize_metadata
-        "HTTP/1.1 #{status} OK#{CRLF}" +
+        "HTTP/1.1 #{status} #{status_name}#{CRLF}" +
         headers.map { |n, v| "#{n}: #{v}#{CRLF}" }.join +
         "#{CRLF}"
+      end
+
+      def status_name
+        case status
+        when 200
+          'OK'
+        else
+          'Not Found'
+        end
       end
     end
   end
