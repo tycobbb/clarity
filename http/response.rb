@@ -16,12 +16,10 @@ module Clarity
       # serialization
       def serialize
         @output ||= begin
-          response = serialize_metadata
-
+          response = serialize_head
           body.each do |line|
             response += line
           end
-
           response
         end
       end
@@ -33,7 +31,7 @@ module Clarity
 
       private
 
-      def serialize_metadata
+      def serialize_head
         "HTTP/1.1 #{status} #{status_name}#{CRLF}" +
         headers.map { |n, v| "#{n}: #{v}#{CRLF}" }.join +
         "#{CRLF}"
