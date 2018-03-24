@@ -1,6 +1,8 @@
 require 'rack'
 require 'socket'
-require 'pry'
+require_relative './utils'
+require_relative './errors'
+require_relative './request'
 
 DEFAULT_RESPONSE = %[
 HTTP/1.1 200 OK
@@ -22,21 +24,12 @@ module Clarity
       def start
         puts 'clarity-http'
         puts '------------'
-        puts "- listening on #{PORT}"
+        puts "- listening on #{PORT}\n"
 
         loop do
-          # handle request
           connection, address = socket.accept
-
-          puts "\nrequest"
-          puts '-------'
-          puts "- address: #{address.inspect}"
           rack_result = handle_in(connection)
-
-          puts "\nresponse"
-          print '--------'
           handle_out(connection, rack_result)
-
           connection.close
         end
       end
@@ -46,8 +39,11 @@ module Clarity
       attr_reader :app
 
       def handle_in(connection)
-        request = connection.recv(1024)
-        puts "\n#{request}"
+        request = Request.new
+        request.parse(connection)
+
+        puts "\n--> in\n"
+        puts "\n#{request}\n"
 
         # build rack environment for this request
         env = build_rack_env(request)
@@ -57,18 +53,18 @@ module Clarity
 
       def handle_out(connection, rack_result)
         response = DEFAULT_RESPONSE
-        puts response
+
+        puts "\n<-- out\n"
+        puts "\n#{response}\n"
 
         connection.send(response, 0)
       end
 
       def build_rack_env(request)
-        lines = request.split("\r\n")
-
         env = {
-          'REQUEST_METHOD'    => 'GET',
+          'REQUEST_METHOD'    => request.method,
           'SCRIPT_NAME'       => '',
-          'PATH_INFO'         => lines[0].split[1],
+          'PATH_INFO'         => request.target,
           'QUERY_STRING'      => '',
           'SERVER_NAME'       => 'localhost',
           'SERVER_PORT'       => '8080',
@@ -80,6 +76,10 @@ module Clarity
           'rack.multiprocess' => false,
           'rack.run_once'     => false
         }
+
+        request.headers.each do |name, value|
+          env["HTTP_#{name}"] = value
+        end
 
         env
       end
